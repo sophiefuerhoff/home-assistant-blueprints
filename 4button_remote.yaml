@@ -1,0 +1,224 @@
+blueprint:
+  name: "4-Button MQTT Remote (Z2M)"
+  description: >
+    Control anything with a 4-button remote via Zigbee2MQTT.
+    Supports Single, Double, and Hold actions for all 4 buttons.
+  domain: automation
+  input:
+    remote_device:
+      name: Remote Device
+      description: Select the MQTT device to use.
+      selector:
+        device:
+          integration: mqtt
+          multiple: false
+
+    # --- Button 1 ---
+    button_1_single:
+      name: "Button 1 - Single Press"
+      default: []
+      selector:
+        action: {}
+    button_1_double:
+      name: "Button 1 - Double Press"
+      default: []
+      selector:
+        action: {}
+    button_1_hold:
+      name: "Button 1 - Hold"
+      default: []
+      selector:
+        action: {}
+
+    # --- Button 2 ---
+    button_2_single:
+      name: "Button 2 - Single Press"
+      default: []
+      selector:
+        action: {}
+    button_2_double:
+      name: "Button 2 - Double Press"
+      default: []
+      selector:
+        action: {}
+    button_2_hold:
+      name: "Button 2 - Hold"
+      default: []
+      selector:
+        action: {}
+
+    # --- Button 3 ---
+    button_3_single:
+      name: "Button 3 - Single Press"
+      default: []
+      selector:
+        action: {}
+    button_3_double:
+      name: "Button 3 - Double Press"
+      default: []
+      selector:
+        action: {}
+    button_3_hold:
+      name: "Button 3 - Hold"
+      default: []
+      selector:
+        action: {}
+
+    # --- Button 4 ---
+    button_4_single:
+      name: "Button 4 - Single Press"
+      default: []
+      selector:
+        action: {}
+    button_4_double:
+      name: "Button 4 - Double Press"
+      default: []
+      selector:
+        action: {}
+    button_4_hold:
+      name: "Button 4 - Hold"
+      default: []
+      selector:
+        action: {}
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  # Button 1
+  - domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: 1_single
+    trigger: device
+    id: "1_single"
+  - domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: 1_double
+    trigger: device
+    id: "1_double"
+  - domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: 1_hold
+    trigger: device
+    id: "1_hold"
+
+  # Button 2
+  - domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: 2_single
+    trigger: device
+    id: "2_single"
+  - domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: 2_double
+    trigger: device
+    id: "2_double"
+  - domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: 2_hold
+    trigger: device
+    id: "2_hold"
+
+  # Button 3
+  - domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: 3_single
+    trigger: device
+    id: "3_single"
+  - domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: 3_double
+    trigger: device
+    id: "3_double"
+  - domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: 3_hold
+    trigger: device
+    id: "3_hold"
+
+  # Button 4
+  - domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: 4_single
+    trigger: device
+    id: "4_single"
+  - domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: 4_double
+    trigger: device
+    id: "4_double"
+  - domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: 4_hold
+    trigger: device
+    id: "4_hold"
+
+action:
+  - choose:
+      # Button 1 Logic
+      - conditions:
+          - condition: trigger
+            id: "1_single"
+        sequence: !input button_1_single
+      - conditions:
+          - condition: trigger
+            id: "1_double"
+        sequence: !input button_1_double
+      - conditions:
+          - condition: trigger
+            id: "1_hold"
+        sequence: !input button_1_hold
+
+      # Button 2 Logic
+      - conditions:
+          - condition: trigger
+            id: "2_single"
+        sequence: !input button_2_single
+      - conditions:
+          - condition: trigger
+            id: "2_double"
+        sequence: !input button_2_double
+      - conditions:
+          - condition: trigger
+            id: "2_hold"
+        sequence: !input button_2_hold
+
+      # Button 3 Logic
+      - conditions:
+          - condition: trigger
+            id: "3_single"
+        sequence: !input button_3_single
+      - conditions:
+          - condition: trigger
+            id: "3_double"
+        sequence: !input button_3_double
+      - conditions:
+          - condition: trigger
+            id: "3_hold"
+        sequence: !input button_3_hold
+
+      # Button 4 Logic
+      - conditions:
+          - condition: trigger
+            id: "4_single"
+        sequence: !input button_4_single
+      - conditions:
+          - condition: trigger
+            id: "4_double"
+        sequence: !input button_4_double
+      - conditions:
+          - condition: trigger
+            id: "4_hold"
+        sequence: !input button_4_hold
