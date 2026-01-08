@@ -1,0 +1,75 @@
+blueprint:
+  name: "Timer Manager (Start/End/Running)"
+  description: >
+    A blueprint to handle actions when a timer starts, ends, or while it is running.
+    Perfect for washing machines, dishwashers, or kitchen timers.
+  domain: automation
+  input:
+    target_timer:
+      name: Timer Entity
+      description: Select the timer to monitor.
+      selector:
+        entity:
+          domain: timer
+          multiple: false
+
+    timer_start_actions:
+      name: "Actions on Start"
+      description: Actions to perform when the timer moves from idle to active.
+      default: []
+      selector:
+        action: {}
+
+    timer_end_actions:
+      name: "Actions on End/Finish"
+      description: Actions to perform when the timer finishes or is cancelled.
+      default: []
+      selector:
+        action: {}
+
+    timer_running_actions:
+      name: "Actions during Runtime (Optional)"
+      description: These actions run once immediately after the start actions.
+      default: []
+      selector:
+        action: {}
+
+mode: restart
+
+trigger:
+  # Timer Starts
+  - platform: state
+    entity_id: !input target_timer
+    from: "idle"
+    to: "active"
+    id: "timer_started"
+  
+  # Timer finishes naturally
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: !input target_timer
+    id: "timer_ended"
+
+  # Timer is cancelled or stopped manually
+  - platform: state
+    entity_id: !input target_timer
+    from: "active"
+    to: "idle"
+    id: "timer_ended"
+
+action:
+  - choose:
+      # START LOGIC
+      - conditions:
+          - condition: trigger
+            id: "timer_started"
+        sequence:
+          - sequence: !input timer_start_actions
+          - sequence: !input timer_running_actions
+
+      # END LOGIC
+      - conditions:
+          - condition: trigger
+            id: "timer_ended"
+        sequence: !input timer_end_actions
