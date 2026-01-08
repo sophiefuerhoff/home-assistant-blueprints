@@ -1,5 +1,5 @@
 blueprint:
-  name: "Remote to Timer: Full Cycle"
+  name: "Timer Manager"
   description: >
     Press a button to start a timer, and define actions for both the start and end of that timer.
   domain: automation
@@ -14,8 +14,8 @@ blueprint:
     
     remote_subtype:
       name: Remote Button Action
-      description: "e.g., 1_double, 2_single, etc."
-      default: "1_double"
+      description: "e.g., single, double, etc."
+      default: "single"
 
     target_timer:
       name: Timer Entity
