@@ -1,35 +1,40 @@
 blueprint:
-  name: "Timer Manager (Start/End/Running)"
+  name: "Remote to Timer: Full Cycle"
   description: >
-    A blueprint to handle actions when a timer starts, ends, or while it is running.
-    Perfect for washing machines, dishwashers, or kitchen timers.
+    Press a button to start a timer, and define actions for both the start and end of that timer.
   domain: automation
   input:
+    remote_device:
+      name: Remote Device
+      description: The MQTT remote that triggers the timer.
+      selector:
+        device:
+          integration: mqtt
+          multiple: false
+    
+    remote_subtype:
+      name: Remote Button Action
+      description: "e.g., 1_double, 2_single, etc."
+      default: "1_double"
+
     target_timer:
       name: Timer Entity
-      description: Select the timer to monitor.
+      description: Select the timer to start and monitor.
       selector:
         entity:
           domain: timer
-          multiple: false
 
+    # --- Actions ---
     timer_start_actions:
       name: "Actions on Start"
-      description: Actions to perform when the timer moves from idle to active.
+      description: Triggered when the button is pressed and timer starts.
       default: []
       selector:
         action: {}
 
     timer_end_actions:
-      name: "Actions on End/Finish"
-      description: Actions to perform when the timer finishes or is cancelled.
-      default: []
-      selector:
-        action: {}
-
-    timer_running_actions:
-      name: "Actions during Runtime (Optional)"
-      description: These actions run once immediately after the start actions.
+      name: "Actions on End"
+      description: Triggered when the timer finishes or is stopped.
       default: []
       selector:
         action: {}
@@ -37,21 +42,22 @@ blueprint:
 mode: restart
 
 trigger:
-  # Timer Starts
-  - platform: state
-    entity_id: !input target_timer
-    from: "idle"
-    to: "active"
-    id: "timer_started"
+  # 1. Trigger from Remote
+  - domain: mqtt
+    device_id: !input remote_device
+    type: action
+    subtype: !input remote_subtype
+    trigger: device
+    id: "remote_pressed"
   
-  # Timer finishes naturally
+  # 2. Trigger when Timer finishes
   - platform: event
     event_type: timer.finished
     event_data:
       entity_id: !input target_timer
     id: "timer_ended"
 
-  # Timer is cancelled or stopped manually
+  # 3. Trigger if Timer is manually stopped
   - platform: state
     entity_id: !input target_timer
     from: "active"
@@ -60,15 +66,17 @@ trigger:
 
 action:
   - choose:
-      # START LOGIC
+      # BUTTON PRESSED -> START TIMER + START ACTIONS
       - conditions:
           - condition: trigger
-            id: "timer_started"
+            id: "remote_pressed"
         sequence:
+          - action: timer.start
+            target:
+              entity_id: !input target_timer
           - sequence: !input timer_start_actions
-          - sequence: !input timer_running_actions
 
-      # END LOGIC
+      # TIMER FINISHED -> END ACTIONS
       - conditions:
           - condition: trigger
             id: "timer_ended"
