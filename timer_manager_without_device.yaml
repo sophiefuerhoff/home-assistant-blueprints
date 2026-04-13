@@ -1,0 +1,65 @@
+blueprint:
+  name: "Timer Action Manager (Pure)"
+  description: >
+    Führt Aktionen aus, wenn ein bestimmter Timer gestartet wird oder abläuft/gestoppt wird. 
+    Kein externes Trigger-Device erforderlich.
+  domain: automation
+  input:
+    target_timer:
+      name: Timer Entität
+      description: Der Timer, der überwacht werden soll.
+      selector:
+        entity:
+          domain: timer
+
+    timer_start_actions:
+      name: "Aktionen bei Start"
+      description: Wird ausgeführt, wenn der Timer gestartet wird.
+      default: []
+      selector:
+        action: {}
+
+    timer_end_actions:
+      name: "Aktionen bei Ende"
+      description: Wird ausgeführt, wenn der Timer abläuft oder manuell gestoppt wird.
+      default: []
+      selector:
+        action: {}
+
+mode: parallel # Erlaubt das gleichzeitige Verarbeiten von Start- und End-Events
+
+trigger:
+  # 1. Timer wird gestartet
+  - platform: state
+    entity_id: !input target_timer
+    from: "idle"
+    to: "active"
+    id: "timer_started"
+  
+  # 2. Timer ist abgelaufen (Event-basiert ist zuverlässiger für das Ende)
+  - platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: !input target_timer
+    id: "timer_ended"
+
+  # 3. Timer wurde manuell abgebrochen/gestoppt
+  - platform: state
+    entity_id: !input target_timer
+    from: "active"
+    to: "idle"
+    id: "timer_ended"
+
+action:
+  - choose:
+      # START
+      - conditions:
+          - condition: trigger
+            id: "timer_started"
+        sequence: !input timer_start_actions
+
+      # ENDE (Ablauf oder Stop)
+      - conditions:
+          - condition: trigger
+            id: "timer_ended"
+        sequence: !input timer_end_actions
