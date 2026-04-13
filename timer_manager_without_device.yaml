@@ -1,65 +1,56 @@
 blueprint:
-  name: "Timer Action Manager (Pure)"
-  description: >
-    Führt Aktionen aus, wenn ein bestimmter Timer gestartet wird oder abläuft/gestoppt wird. 
-    Kein externes Trigger-Device erforderlich.
+  name: "Timer Action Manager (Fixed)"
+  description: "Reagiert präzise auf Timer-Events ohne Geister-Trigger."
   domain: automation
   input:
     target_timer:
       name: Timer Entität
-      description: Der Timer, der überwacht werden soll.
       selector:
         entity:
           domain: timer
-
     timer_start_actions:
       name: "Aktionen bei Start"
-      description: Wird ausgeführt, wenn der Timer gestartet wird.
       default: []
       selector:
         action: {}
-
     timer_end_actions:
       name: "Aktionen bei Ende"
-      description: Wird ausgeführt, wenn der Timer abläuft oder manuell gestoppt wird.
       default: []
       selector:
         action: {}
 
-mode: parallel # Erlaubt das gleichzeitige Verarbeiten von Start- und End-Events
+mode: parallel
 
 trigger:
-  # 1. Timer wird gestartet
-  - platform: state
-    entity_id: !input target_timer
-    from: "idle"
-    to: "active"
-    id: "timer_started"
-  
-  # 2. Timer ist abgelaufen (Event-basiert ist zuverlässiger für das Ende)
+  # Reagiert nur, wenn der Timer wirklich GESTARTET wird
+  - platform: event
+    event_type: timer.started
+    event_data:
+      entity_id: !input target_timer
+    id: "t_start"
+
+  # Reagiert nur, wenn der Timer von selbst ABLÄUFT
   - platform: event
     event_type: timer.finished
     event_data:
       entity_id: !input target_timer
-    id: "timer_ended"
+    id: "t_end"
 
-  # 3. Timer wurde manuell abgebrochen/gestoppt
-  - platform: state
-    entity_id: !input target_timer
-    from: "active"
-    to: "idle"
-    id: "timer_ended"
+  # Reagiert nur, wenn der Timer manuell GESTOPPT wird
+  - platform: event
+    event_type: timer.cancelled
+    event_data:
+      entity_id: !input target_timer
+    id: "t_end"
 
 action:
   - choose:
-      # START
       - conditions:
           - condition: trigger
-            id: "timer_started"
+            id: "t_start"
         sequence: !input timer_start_actions
 
-      # ENDE (Ablauf oder Stop)
       - conditions:
           - condition: trigger
-            id: "timer_ended"
+            id: "t_end"
         sequence: !input timer_end_actions
